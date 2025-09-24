@@ -3,3 +3,5 @@ uvicorn
 python-dotenv
 jinja2
 passlib[bcrypt]
+itsdangerous
+python-multipart
