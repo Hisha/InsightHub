@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import os, shutil
+import pandas as pd
 
 from app.middleware import AuthMiddleware
 from app.auth import router as auth_router
