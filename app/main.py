@@ -30,3 +30,7 @@ templates.env.globals["root_path"] = app.root_path
 @app.get("/")
 async def home():
     return {"message": "Welcome to InsightHub. You're logged in."}
+
+@app.get("/debug")
+async def debug_root_path(request: Request):
+    return {"root_path": request.scope.get("root_path", ""), "path": request.url.path}
