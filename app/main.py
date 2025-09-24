@@ -30,6 +30,10 @@ templates.env.globals["root_path"] = "/insight/"
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# -----------------------------------------------------------------------------
+# GETS
+# -----------------------------------------------------------------------------
+
 # INDEX PAGE — secured
 @insight_app.get("/")
 async def insight_index(request: Request):
@@ -37,6 +41,49 @@ async def insight_index(request: Request):
     if not user:
         return RedirectResponse(url="/insight/login", status_code=303)
     return templates.TemplateResponse("index.html", {"request": request, "user": user})
+
+# -----------------------------------------------------------------------------
+# POSTS
+# -----------------------------------------------------------------------------
+
+@insight_app.post("/parse_with_header")
+async def parse_with_header(request: Request, filename: str = Form(...), header_row: int = Form(...)):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/insight/login", status_code=303)
+
+    try:
+        file_path = os.path.join(UPLOAD_DIR, filename)
+
+        # header=header_row-1 makes that row the header
+        # skiprows=range(header_row-1) skips everything before the header
+        df = pd.read_excel(
+            file_path,
+            header=0,
+            skiprows=range(header_row - 1),
+            engine="openpyxl"
+        )
+
+        cleaned_html = df.head(20).to_html(classes="excel-preview", index=False)
+
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "user": user,
+                "message": f"Parsed '{filename}' with headers from row {header_row}",
+                "preview_table": cleaned_html
+            }
+        )
+    except Exception as e:
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "user": user,
+                "error": f"Header parsing failed: {str(e)}"
+            }
+        )
 
 # FILE UPLOAD HANDLER
 @insight_app.post("/upload")
