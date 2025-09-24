@@ -46,14 +46,13 @@ async def upload_excel(request: Request, file: UploadFile = File(...)):
         return RedirectResponse(url="/insight/login", status_code=303)
 
     try:
-        # Save the file
         file_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Parse with pandas (only first sheet)
-        df = pd.read_excel(file_path, engine="openpyxl")
-        preview_html = df.head(10).to_html(classes="excel-preview", index=False)
+        # Load WITHOUT headers (so we show all raw rows)
+        df_raw = pd.read_excel(file_path, header=None, engine="openpyxl")
+        preview_html = df_raw.head(10).to_html(classes="raw-preview", index=True, header=False)
 
         return templates.TemplateResponse(
             "index.html",
@@ -61,7 +60,8 @@ async def upload_excel(request: Request, file: UploadFile = File(...)):
                 "request": request,
                 "user": user,
                 "message": f"File '{file.filename}' uploaded successfully!",
-                "preview_table": preview_html,
+                "raw_preview": preview_html,
+                "uploaded_filename": file.filename
             }
         )
     except Exception as e:
