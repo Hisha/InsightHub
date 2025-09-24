@@ -47,7 +47,11 @@ async def insight_index(request: Request):
 # -----------------------------------------------------------------------------
 
 @insight_app.post("/parse_with_header")
-async def parse_with_header(request: Request, filename: str = Form(...), header_row: int = Form(...)):
+async def parse_with_header(
+    request: Request,
+    filename: str = Form(...),
+    header_row: int = Form(...)
+):
     user = request.session.get("user")
     if not user:
         return RedirectResponse(url="/insight/login", status_code=303)
@@ -55,12 +59,10 @@ async def parse_with_header(request: Request, filename: str = Form(...), header_
     try:
         file_path = os.path.join(UPLOAD_DIR, filename)
 
-        # header=header_row-1 makes that row the header
-        # skiprows=range(header_row-1) skips everything before the header
+        # FIXED: use header=header_row-1, no skiprows
         df = pd.read_excel(
             file_path,
-            header=0,
-            skiprows=range(header_row - 1),
+            header=header_row - 1,
             engine="openpyxl"
         )
 
@@ -71,7 +73,7 @@ async def parse_with_header(request: Request, filename: str = Form(...), header_
             {
                 "request": request,
                 "user": user,
-                "message": f"Parsed '{filename}' with headers from row {header_row}",
+                "message": f"Parsed '{filename}' using row {header_row} as header.",
                 "preview_table": cleaned_html
             }
         )
