@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from app.utils.security import verify_credentials
 
 templates = Jinja2Templates(directory="templates")
-
+PREFIX = "/insight"
 router = APIRouter()
 
 
