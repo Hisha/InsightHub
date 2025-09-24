@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, UploadFile, File
+from fastapi import FastAPI, Request, UploadFile, File, Form
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware import Middleware
 from fastapi.staticfiles import StaticFiles
