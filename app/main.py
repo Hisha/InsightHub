@@ -6,20 +6,15 @@ from app.middleware import auth_middleware
 from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
 
-# Create the sub-app first (InsightHub's core functionality)
-insight_app = FastAPI()
+# Single unified app (mounted at / in FastAPI, but accessed via /insight due to nginx rewrite)
+app = FastAPI()
 
-# Middleware and routes for InsightHub
-insight_app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
-insight_app.middleware("http")(auth_middleware)
-insight_app.include_router(auth_router)
-insight_app.mount("/static", StaticFiles(directory="static"), name="static")
+# Middleware and route setup
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
+app.middleware("http")(auth_middleware)
+app.include_router(auth_router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Home route (relative to /insight/)
-@insight_app.get("/")
+@app.get("/")
 async def home():
     return {"message": "Welcome to InsightHub. You're logged in."}
-
-# Root FastAPI app that mounts InsightHub at /insight
-main_app = FastAPI()
-main_app.mount("/insight", insight_app)
