@@ -13,16 +13,15 @@ async def login_get(request: Request):
     return templates.TemplateResponse("login.html", {"request": request, "error": None})
 
 
-@router.post(f"{PREFIX}/login")
+@router.post("/login")
 async def login_post(request: Request, username: str = Form(...), password: str = Form(...)):
     if verify_credentials(username, password):
         request.session["user"] = username
-        # ✅ Redirect to InsightHub homepage, not root "/"
         return RedirectResponse(url=f"{PREFIX}/", status_code=303)
     return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
 
 
-@router.get(f"{PREFIX}/logout")
+@router.get("/logout")
 async def logout(request: Request):
     request.session.clear()
     return RedirectResponse(url=f"{PREFIX}/login", status_code=303)
