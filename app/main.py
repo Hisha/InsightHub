@@ -15,6 +15,10 @@ app.include_router(auth_router)
 # Static files (favicon, css, etc.)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Mount the insight app under a subpath
+main_app = FastAPI()
+main_app.mount("/insight", insight_app)
+
 @app.get("/")
 async def home():
     return {"message": "Welcome to InsightHub. You're logged in."}
