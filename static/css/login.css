@@ -1,0 +1,40 @@
+/* static/css/login.css */
+
+body {
+  background-color: #121212;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.login-box {
+  background-color: #1e1e1e;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-box .form-control {
+  background-color: #2c2c2c;
+  border: none;
+  color: #fff;
+}
+
+.login-box .form-control:focus {
+  box-shadow: none;
+  background-color: #2c2c2c;
+  color: #fff;
+}
+
+.login-box .btn-primary {
+  background-color: #00bcd4;
+  border: none;
+}
+
+.login-box .btn-primary:hover {
+  background-color: #0097a7;
+}
