@@ -15,10 +15,11 @@ insight_app.middleware("http")(auth_middleware)
 insight_app.include_router(auth_router)
 insight_app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Root app that mounts InsightHub at /insight
-main_app = FastAPI()
-main_app.mount("/insight", insight_app)
-
-@app.get("/")
+# Home route (relative to /insight/)
+@insight_app.get("/")
 async def home():
     return {"message": "Welcome to InsightHub. You're logged in."}
+
+# Root FastAPI app that mounts InsightHub at /insight
+main_app = FastAPI()
+main_app.mount("/insight", insight_app)
