@@ -4,22 +4,24 @@ from fastapi.templating import Jinja2Templates
 from app.utils.security import verify_credentials
 
 templates = Jinja2Templates(directory="templates")
-PREFIX = "/insight"
 
 router = APIRouter()
 
-@router.get(f"{PREFIX}/login")
+
+@router.get("/login")
 async def login_get(request: Request):
     return templates.TemplateResponse("login.html", {"request": request, "error": None})
 
-@router.post(f"{PREFIX}/login")
+
+@router.post("/login")
 async def login_post(request: Request, username: str = Form(...), password: str = Form(...)):
     if verify_credentials(username, password):
         request.session["user"] = username
-        return RedirectResponse(url=f"{PREFIX}/", status_code=303)
+        return RedirectResponse(url="/", status_code=303)
     return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
 
-@router.get(f"{PREFIX}/logout")
+
+@router.get("/logout")
 async def logout(request: Request):
     request.session.clear()
-    return RedirectResponse(url=f"{PREFIX}/login", status_code=303)
+    return RedirectResponse(url="/login", status_code=303)
