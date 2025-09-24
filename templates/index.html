@@ -46,5 +46,29 @@
             <button type="submit">Continue</button>
         </form>
     {% endif %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const input = document.getElementById("header_row");
+            const table = document.querySelector("table.raw-preview");
+
+            if (!input || !table) return;
+
+            input.addEventListener("input", function () {
+                const val = parseInt(input.value);
+                const rows = table.querySelectorAll("tbody tr");
+
+                rows.forEach((row, idx) => {
+                    const excelRowNumber = idx + 1;
+                    if (excelRowNumber === val) {
+                        row.classList.add("highlight-row");
+                    } else {
+                        row.classList.remove("highlight-row");
+                    }
+                });
+            });
+        });
+    </script>
+    
 </body>
 </html>
