@@ -19,7 +19,7 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
 fi
 
 # Run the FastAPI app
-exec uvicorn app.main:app \
+exec uvicorn app.main:main_app \
   --host 0.0.0.0 \
   --port 8000 \
   --reload
