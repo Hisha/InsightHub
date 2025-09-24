@@ -52,6 +52,8 @@ async def parse_with_header(
     filename: str = Form(...),
     header_row: int = Form(...)
 ):
+    import pandas as pd
+
     user = request.session.get("user")
     if not user:
         return RedirectResponse(url="/insight/login", status_code=303)
@@ -59,12 +61,19 @@ async def parse_with_header(
     try:
         file_path = os.path.join(UPLOAD_DIR, filename)
 
-        # FIXED: use header=header_row-1, no skiprows
-        df = pd.read_excel(
-            file_path,
-            header=header_row - 1,
-            engine="openpyxl"
-        )
+        # Read all rows without header
+        df_raw = pd.read_excel(file_path, header=None, engine="openpyxl")
+
+        # Check row exists
+        if header_row > len(df_raw):
+            raise ValueError(f"Header row {header_row} is beyond file length.")
+
+        # Manually set header row
+        header_values = df_raw.iloc[header_row - 1].tolist()
+
+        # Remove all rows before header
+        df = df_raw.iloc[header_row:].copy()
+        df.columns = header_values
 
         cleaned_html = df.head(20).to_html(classes="excel-preview", index=False)
 
