@@ -1,21 +1,21 @@
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
+
 from app.middleware import auth_middleware
 from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
 
-app = FastAPI()
+# Create the sub-app first (InsightHub's core functionality)
+insight_app = FastAPI()
 
-app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
-app.middleware("http")(auth_middleware)
+# Middleware and routes for InsightHub
+insight_app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
+insight_app.middleware("http")(auth_middleware)
+insight_app.include_router(auth_router)
+insight_app.mount("/static", StaticFiles(directory="static"), name="static")
 
-app.include_router(auth_router)
-
-# Static files (favicon, css, etc.)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Mount the insight app under a subpath
+# Root app that mounts InsightHub at /insight
 main_app = FastAPI()
 main_app.mount("/insight", insight_app)
 
