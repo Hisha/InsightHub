@@ -70,7 +70,6 @@ async def parse_with_header(
 
         # Manually set header row
         header_values = df_raw.iloc[header_row - 1].tolist()
-        print("DEBUG — header_row_values:", header_values)
 
         # Remove all rows before header
         df = df_raw.iloc[header_row:].copy()
