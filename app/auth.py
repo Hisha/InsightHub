@@ -20,4 +20,5 @@ async def login_post(request: Request, username: str = Form(...), password: str 
 @router.get("/logout")
 async def logout(request: Request):
     request.session.clear()
-    return RedirectResponse(url="/login", status_code=302)
+    root = request.scope.get("root_path", "")
+    return RedirectResponse(url=f"{root}/login", status_code=303)
