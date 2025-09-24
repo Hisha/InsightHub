@@ -76,6 +76,9 @@ async def parse_with_header(
         df = df_raw.iloc[header_row:].copy()
         df.columns = header_values
 
+        # Replace NaNs with empty string
+        df = df.fillna("")
+
         cleaned_html = df.head(20).to_html(classes="excel-preview", index=False)
 
         return templates.TemplateResponse(
