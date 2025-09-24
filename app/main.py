@@ -19,6 +19,9 @@ app = FastAPI(middleware=middleware)
 app.include_router(auth_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+templates.env.globals["root_path"] = app.root_path
+
+
 @app.get("/")
 async def home():
     return {"message": "Welcome to InsightHub. You're logged in."}
