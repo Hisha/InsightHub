@@ -111,7 +111,7 @@ async def upload_excel(request: Request, file: UploadFile = File(...)):
 
         # Load WITHOUT headers (so we show all raw rows)
         df_raw = pd.read_excel(file_path, header=None, engine="openpyxl")
-        preview_html = df_raw.head(10).to_html(classes="raw-preview", index=True, header=False)
+        preview_html = df_raw.head(10).to_html(classes="raw-preview", index=df_raw.head(10).index + 1, header=False)
 
         return templates.TemplateResponse(
             "index.html",
