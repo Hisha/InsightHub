@@ -19,5 +19,12 @@
     {% if error %}
         <p style="color:red;">{{ error }}</p>
     {% endif %}
+    
+    {% if preview_table %}
+        <h2>Preview of Uploaded File</h2>
+        <div style="overflow-x: auto; max-width: 100%;">
+            {{ preview_table | safe }}
+        </div>
+    {% endif %}
 </body>
 </html>
