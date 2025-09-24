@@ -24,7 +24,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Templates & Globals
 # --------------------------------------------------------------------
 templates = Jinja2Templates(directory="templates")
-templates.env.globals["root_path"] = app.root_path
+templates.env.globals["root_path"] = "/insight"
 
 
 @app.get("/")
