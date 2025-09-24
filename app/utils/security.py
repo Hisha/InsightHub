@@ -1,6 +1,10 @@
 import os
 from dotenv import load_dotenv
 from passlib.context import CryptContext
+import bcrypt
+
+if not hasattr(bcrypt, "__about__"):
+    bcrypt.__about__ = type("about", (), {"__version__": bcrypt.__version__})
 
 load_dotenv()
 
