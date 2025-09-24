@@ -1,17 +1,21 @@
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware import Middleware
 
-from app.middleware import auth_middleware
+from app.middleware import AuthMiddleware
 from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
 
-# Single unified app (mounted at / in FastAPI, but accessed via /insight due to nginx rewrite)
-app = FastAPI()
+# Define app with middleware list (ensures correct order)
+middleware = [
+    Middleware(SessionMiddleware, secret_key=SESSION_SECRET),
+    Middleware(AuthMiddleware),
+]
 
-# Middleware and route setup
-app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET)
-app.middleware("http")(auth_middleware)
+app = FastAPI(middleware=middleware)
+
+# Mount routes and static files
 app.include_router(auth_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
