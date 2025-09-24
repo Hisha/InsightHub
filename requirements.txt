@@ -7,3 +7,5 @@ itsdangerous
 python-multipart
 pandas
 openpyxl
+sqlalchemy
+pymysql
