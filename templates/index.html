@@ -26,5 +26,20 @@
             {{ preview_table | safe }}
         </div>
     {% endif %}
+    {% if raw_preview %}
+        <h2>Select Header Row</h2>
+        <p>Below is the raw preview of your Excel file. Please select which row contains the column headers (1-based).</p>
+
+        <div style="overflow-x: auto;">
+            {{ raw_preview | safe }}
+        </div>
+
+        <form action="/insight/parse_with_header" method="post">
+            <input type="hidden" name="filename" value="{{ uploaded_filename }}">
+            <label for="header_row">Header Row:</label>
+            <input type="number" id="header_row" name="header_row" min="1" required>
+            <button type="submit">Continue</button>
+        </form>
+    {% endif %}
 </body>
 </html>
