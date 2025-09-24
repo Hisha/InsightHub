@@ -1,7 +1,10 @@
 import os
 from passlib.hash import bcrypt
 from dotenv import load_dotenv
-
+import bcrypt
+if not hasattr(bcrypt, "__about__"):
+    bcrypt.__about__ = type("about", (), {"__version__": bcrypt.__version__})
+    
 load_dotenv()
 
 USERNAME = os.getenv("INSIGHTHUB_USERNAME", "admin")
