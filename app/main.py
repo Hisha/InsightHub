@@ -19,7 +19,11 @@ app = FastAPI(middleware=middleware)
 app.include_router(auth_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-templates.env.globals["root_path"] = app.root_path
+# --------------------------------------------------------------------
+# Templates & Globals
+# --------------------------------------------------------------------
+templates = Jinja2Templates(directory="templates")
+templates.env.globals["root_path"] = "/chat/"
 
 
 @app.get("/")
