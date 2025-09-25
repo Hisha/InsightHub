@@ -10,3 +10,4 @@ openpyxl
 sqlalchemy
 pymysql
 python-dotenv
+httpx
