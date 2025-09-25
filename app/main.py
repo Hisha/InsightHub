@@ -113,6 +113,7 @@ async def analyze_table(
                 "sql_query": sql_query,
                 "result_html": None,
                 "job_id": job_id,
+                "table_preview": df.head(20).to_string(index=False)  # or a pre-rendered preview string
             })
 
         except Exception as e:
