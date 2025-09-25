@@ -1,10 +1,11 @@
-from fastapi import FastAPI, Request, UploadFile, File, Form, Query
+from fastapi import FastAPI, Request, UploadFile, File, Form, Query, HTTPException
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware import Middleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse, HTMLResponse
 import os, shutil
+import httpx
 import pandas as pd
 from app.db import slugify, insert_uploaded_file_metadata, insert_dynamic_table, engine
 from app.utils.llm_client import submit_llm_prompt, get_llm_response
@@ -30,6 +31,9 @@ templates.env.globals["current_year"] = datetime.now().year
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+LLAMALITH_URL = "http://192.168.10.23:8000"
+LLAMALITH_API_TOKEN = os.getenv("LLAMALITH_API_TOKEN")
 
 #---------------------------------------------------------------------------------------------
 # DELETES
@@ -294,6 +298,50 @@ async def run_sql_query(
         "sql_query": sql_query,
         "result_html": result_html
     })
+
+async def send_llamalith_job(prompt: str) -> str:
+    headers = {"Authorization": f"Bearer {LLAMALITH_API_TOKEN}"}
+    payload = {
+        "content": prompt,
+        "model": "mistral",
+        "system_prompt": "",
+        "assistant_context": "",
+    }
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(f"{LLAMALITH_URL}/api/jobs", json=payload, headers=headers)
+        if resp.status_code == 200:
+            return resp.json().get("job_id")
+        return None
+
+@insight_app.post("/analyze/{table_name}/ask")
+async def ask_question(table_name: str, request: Request):
+    body = await request.json()
+    question = body.get("question")
+    if not question:
+        raise HTTPException(status_code=400, detail="Question not provided")
+
+    # Build schema string for the LLM
+    inspector = inspect(engine)
+    columns = inspector.get_columns(table_name)
+    schema = [f"{col['name']} ({str(col['type'])})" for col in columns]
+
+    prompt_lines = [
+        f"You are an expert data analyst. A user has uploaded a table named '{table_name}' with the following schema:",
+        "",
+        *schema,
+        "",
+        f'They asked the following question:\n"{question}"',
+        "",
+        "Write a single SQL query (PostgreSQL dialect) that answers the question.",
+        "Do not include any commentary or explanation. Just return the SQL query only.",
+    ]
+    prompt = "\n".join(prompt_lines)
+
+    job_id = await send_llamalith_job(prompt)
+    if not job_id:
+        raise HTTPException(status_code=500, detail="Failed to submit job to LLM")
+
+    return {"job_id": job_id}
 
 main_app = FastAPI()
 main_app.mount("/insight", insight_app)
