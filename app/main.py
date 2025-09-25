@@ -14,6 +14,7 @@ from app.middleware import AuthMiddleware
 from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
 from datetime import datetime
+from app.routes import analyze
 
 middleware = [
     Middleware(SessionMiddleware, secret_key=SESSION_SECRET, session_cookie="insight_session"),
@@ -24,6 +25,7 @@ insight_app = FastAPI(middleware=middleware)
 
 insight_app.include_router(auth_router)
 insight_app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(analyze.router, prefix="/insight")
 
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["root_path"] = "/insight/"
