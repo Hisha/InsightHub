@@ -1,22 +1,9 @@
-/* Page layout */
-html, body {
-  height: 100%;
+body {
+  font-family: sans-serif;
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
-  background-color: #f8f8f8;
+  background: #f0f2f5;
   color: #222;
-}
-
-.layout-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-main {
-  flex: 1;
-  padding: 2em;
 }
 
 nav {
@@ -32,15 +19,22 @@ nav a {
   font-weight: bold;
 }
 
+main {
+  padding: 2em;
+}
+
 footer {
   background: #eee;
   text-align: center;
   padding: 1em;
   font-size: 0.9em;
   color: #444;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
-/* Upload form styling */
 form input[type="file"],
 form input[type="number"],
 form button {
@@ -62,7 +56,12 @@ form button:hover {
   background-color: #357ab8;
 }
 
-/* Table row highlight */
+.table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+  margin-top: 1em;
+}
+
 .highlight-row {
   background-color: #ffffcc !important;
 }
