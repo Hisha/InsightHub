@@ -1,19 +1,71 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Ask a question about table: <code>{{ table_name }}</code></h1>
-<form method="get">
-  <input type="hidden" name="table_name" value="{{ table_name }}"/>
-  <input type="text" name="question" placeholder="e.g. What is the most common issue location?" style="width:60%; padding:0.5em;" required/>
+<h1>Ask a Question About <code>{{ table_name }}</code></h1>
+
+<form id="question-form">
+  <label for="question">Your question:</label><br>
+  <input type="text" id="question" name="question" style="width: 80%;" required>
   <button type="submit">Ask</button>
 </form>
 
-{% if sql_query %}
-  <h3>Generated SQL:</h3>
-  <pre style="background:#f0f0f0; padding:1em;">{{ sql_query }}</pre>
-{% endif %}
+<div id="response-area" style="margin-top: 2em;">
+  <p id="loading" style="display:none;"><em>Submitting your question…</em></p>
+  <div id="llm-output"></div>
+</div>
 
-{% if result_html %}
-  <h3>Result:</h3>
-  {{ result_html|safe }}
-{% endif %}
+<script>
+document.getElementById("question-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const question = document.getElementById("question").value;
+  const loadingEl = document.getElementById("loading");
+  const outputEl = document.getElementById("llm-output");
+  outputEl.innerHTML = "";
+  loadingEl.style.display = "block";
+
+  try {
+    const response = await fetch(`/insight/analyze/{{ table_name }}/ask`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+
+    const data = await response.json();
+    if (!data.job_id) {
+      throw new Error("No job ID returned.");
+    }
+
+    // Polling
+    const jobId = data.job_id;
+    let attempts = 0;
+
+    async function pollForResult() {
+      const poll = await fetch(`/insight/analyze/status/${jobId}`);
+      const result = await poll.json();
+
+      if (result.done) {
+        loadingEl.style.display = "none";
+        outputEl.innerHTML = `
+          <h3>Suggested SQL Query:</h3>
+          <pre><code>${result.output}</code></pre>
+          <form method="post" action="/insight/run_query/{{ table_name }}">
+            <input type="hidden" name="sql_query" value="${encodeURIComponent(result.output)}">
+            <button type="submit">Run This Query</button>
+          </form>
+        `;
+      } else {
+        attempts++;
+        if (attempts > 60) {
+          loadingEl.innerHTML = "<span style='color:red;'>Timeout after waiting 2 minutes for LLM response.</span>";
+        } else {
+          setTimeout(pollForResult, 2000);
+        }
+      }
+    }
+
+    pollForResult();
+  } catch (err) {
+    loadingEl.innerHTML = `<span style="color:red;">Error: ${err.message}</span>`;
+  }
+});
+</script>
 {% endblock %}
