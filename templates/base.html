@@ -6,17 +6,19 @@
     <link rel="stylesheet" href="/insight/static/main.css">
 </head>
 <body>
+  <div class="layout-wrapper">
     <nav>
-        <a href="/insight/">Home</a>
-        <!-- Add more links here later -->
+      <a href="/insight/">Home</a>
+      <a href="/insight/logout">Logout</a>
     </nav>
 
     <main>
-        {% block content %}{% endblock %}
+      {% block content %}{% endblock %}
     </main>
 
     <footer>
-        InsightHub &copy; 2025
+      InsightHub &copy; {{ current_year }}
     </footer>
+  </div>
 </body>
 </html>
