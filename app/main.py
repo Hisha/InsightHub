@@ -11,6 +11,7 @@ from sqlalchemy import text
 from app.middleware import AuthMiddleware
 from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
+from datetime import datetime
 
 middleware = [
     Middleware(SessionMiddleware, secret_key=SESSION_SECRET),
@@ -24,6 +25,7 @@ insight_app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["root_path"] = "/insight/"
+templates.env.globals["now"] = lambda: datetime.now()
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
