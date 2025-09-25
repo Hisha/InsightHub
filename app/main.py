@@ -59,7 +59,7 @@ async def manage_tables(request: Request):
         return RedirectResponse(url="/insight/login", status_code=303)
     with engine.connect() as conn:
         result = conn.execute(text("SELECT table_name, uploaded_by, uploaded_at FROM uploaded_files ORDER BY uploaded_at ASC"))
-        tables = [dict(row) for row in result.fetchall()]
+        tables = result.mappings().all()
     return templates.TemplateResponse("manage.html", {"request": request, "user": user, "tables": tables})
 
 @insight_app.get("/preview_table/{table_name}")
