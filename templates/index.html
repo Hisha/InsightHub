@@ -57,8 +57,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const rows = table.querySelectorAll("tbody tr");
 
         rows.forEach((row, idx) => {
-            const excelRow = idx + 1;
-            row.classList.toggle("highlight-row", excelRow === val);
+            const excelRowNumber = idx + 1;
+            if (excelRowNumber === val) {
+                row.classList.add("highlight-row");
+            } else {
+                row.classList.remove("highlight-row");
+            }
         });
     });
 });
