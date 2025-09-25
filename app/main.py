@@ -52,7 +52,7 @@ async def upload_excel(request: Request, file: UploadFile = File(...)):
 
         preview_df = df_raw.head(10).copy()
         preview_df.index = list(preview_df.index + 1)
-        preview_html = preview_df.to_html(classes="raw-preview", index=True, header=False)
+        preview_html = preview_df.to_html(classes="raw-preview", index=True, header=False, border=0)
 
         return templates.TemplateResponse(
             "index.html",
