@@ -1,11 +1,22 @@
-body {
-  font-family: sans-serif;
+
+/* General Layout */
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
-  background: #f0f2f5;
+  font-family: sans-serif;
+  background: #f8f8f8;
   color: #222;
+  display: flex;
+  flex-direction: column;
 }
 
+main {
+  flex: 1;
+  padding: 2em;
+}
+
+/* Navbar */
 nav {
   background: #1f2937;
   padding: 1em;
@@ -19,22 +30,16 @@ nav a {
   font-weight: bold;
 }
 
-main {
-  padding: 2em;
-}
-
+/* Footer */
 footer {
   background: #eee;
   text-align: center;
   padding: 1em;
   font-size: 0.9em;
   color: #444;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
 }
 
+/* Upload section styling */
 form input[type="file"],
 form input[type="number"],
 form button {
@@ -56,12 +61,24 @@ form button:hover {
   background-color: #357ab8;
 }
 
-.table-wrapper {
-  overflow-x: auto;
-  max-width: 100%;
+/* Table highlight logic */
+.highlight-row {
+  background-color: #ffffcc !important;
+}
+
+/* Preview tables */
+table.raw-preview,
+table.excel-preview {
+  border-collapse: collapse;
+  width: 100%;
   margin-top: 1em;
 }
 
-.highlight-row {
-  background-color: #ffffcc !important;
+table.raw-preview th,
+table.raw-preview td,
+table.excel-preview th,
+table.excel-preview td {
+  border: 1px solid #ccc;
+  padding: 0.5em;
+  text-align: left;
 }
