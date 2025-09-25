@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Manage Uploaded Tables</h1>
+<table class="uploaded-tables">
+  <thead>
+    <tr>
+      <th>Table Name</th>
+      <th>Uploaded By</th>
+      <th>Date</th>
+      <th>Preview</th>
+      <th>Delete</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for table in tables %}
+    <tr>
+      <td>{{ table.table_name }}</td>
+      <td>{{ table.uploaded_by }}</td>
+      <td>{{ table.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td><button class="preview-btn" data-name="{{ table.table_name }}">+</button></td>
+      <td><button class="delete-btn" data-name="{{ table.table_name }}">🗑️</button></td>
+    </tr>
+    <tr class="preview-row" id="preview-{{ table.table_name }}" style="display:none;">
+      <td colspan="5"><div class="preview-content">Loading...</div></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
