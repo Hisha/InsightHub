@@ -32,9 +32,7 @@
     <p>Below is the raw preview of your Excel file. Please select which row contains the column headers (1-based).</p>
 
     <div style="overflow-x:auto;">
-        <table class="raw-preview">
-            {{ raw_preview | safe }}
-        </table>
+        {{ raw_preview | safe }}
     </div>
 
     <form action="/insight/parse_with_header" method="post">
