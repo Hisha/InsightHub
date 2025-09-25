@@ -82,3 +82,26 @@ table.excel-preview td {
   padding: 0.5em;
   text-align: left;
 }
+
+table.manage-table td,
+table.manage-table th {
+  padding: 0.5em 1em;
+  white-space: nowrap;
+  vertical-align: top;
+  border: 1px solid #ccc;
+}
+
+.manage-preview {
+  margin-left: 2em;
+  font-size: 0.9em;
+  color: #333;
+}
+
+table.manage-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table.manage-table th {
+  background-color: #f0f0f0;
+}
