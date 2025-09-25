@@ -105,3 +105,21 @@ table.manage-table {
 table.manage-table th {
   background-color: #f0f0f0;
 }
+
+.uploaded-tables td,
+.uploaded-tables th {
+  padding: 0.6em 1.2em;
+  border: 1px solid #ccc;
+  white-space: nowrap;
+}
+
+.uploaded-tables th {
+  background-color: #f0f0f0;
+  text-align: left;
+}
+
+.preview-content {
+  padding: 1em;
+  background-color: #fcfcfc;
+  border-top: 1px solid #ccc;
+}
