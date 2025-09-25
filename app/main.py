@@ -25,7 +25,7 @@ insight_app = FastAPI(middleware=middleware)
 
 insight_app.include_router(auth_router)
 insight_app.mount("/static", StaticFiles(directory="static"), name="static")
-app.include_router(analyze.router, prefix="/insight")
+insight_app.include_router(analyze.router, prefix="/insight")
 
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["root_path"] = "/insight/"
