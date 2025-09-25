@@ -4,13 +4,14 @@
 <h1>Welcome, {{ user }}</h1>
 
 {% if message %}
-    <p style="color:green;">{{ message }}</p>
-{% endif %}
-{% if error %}
-    <p style="color:red;">{{ error }}</p>
+    <p class="success">{{ message }}</p>
 {% endif %}
 
-<div id="upload-section" {% if raw_preview or preview_table %}style="display:none;"{% endif %}>
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+
+<div id="upload-section" class="card" {% if raw_preview or preview_table %}style="display:none;"{% endif %}>
     <h2>Upload Excel File</h2>
     <form action="/insight/upload" method="post" enctype="multipart/form-data">
         <input type="file" name="file" accept=".xlsx,.xls" required>
@@ -19,28 +20,30 @@
 </div>
 
 {% if preview_table %}
-    <h2>Parsed Preview</h2>
-    <div style="overflow-x:auto;">
-        {{ preview_table | safe }}
+    <div class="card">
+        <h2>Parsed Preview</h2>
+        <div class="scrollable">
+            {{ preview_table | safe }}
+        </div>
     </div>
 {% endif %}
 
 {% if raw_preview %}
-    <h2>Select Header Row</h2>
-    <p>Below is the raw preview of your Excel file. Please select which row contains the column headers (1-based).</p>
+    <div class="card">
+        <h2>Select Header Row</h2>
+        <p>Below is the raw preview of your Excel file. Please select which row contains the column headers (1-based).</p>
 
-    <div style="overflow-x:auto;">
-        <table class="raw-preview">
+        <div class="scrollable">
             {{ raw_preview | safe }}
-        </table>
-    </div>
+        </div>
 
-    <form action="/insight/parse_with_header" method="post">
-        <input type="hidden" name="filename" value="{{ uploaded_filename }}">
-        <label for="header_row">Header Row (Excel-style):</label>
-        <input type="number" id="header_row" name="header_row" min="1" required>
-        <button type="submit">Continue</button>
-    </form>
+        <form action="/insight/parse_with_header" method="post">
+            <input type="hidden" name="filename" value="{{ uploaded_filename }}">
+            <label for="header_row">Header Row:</label>
+            <input type="number" id="header_row" name="header_row" min="1" required>
+            <button type="submit">Continue</button>
+        </form>
+    </div>
 {% endif %}
 
 <script>
