@@ -6,7 +6,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import os, shutil
 import pandas as pd
-from app.db import slugify, insert_uploaded_file_metadata, insert_dynamic_table
+from app.db import slugify, insert_uploaded_file_metadata, insert_dynamic_table, engine
+from sqlalchemy import text
 from app.middleware import AuthMiddleware
 from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
