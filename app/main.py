@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, UploadFile, File, Form
+from fastapi import FastAPI, Request, UploadFile, File, Form, Query
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware import Middleware
 from fastapi.staticfiles import StaticFiles
@@ -51,6 +51,65 @@ async def insight_index(request: Request):
     if not user:
         return RedirectResponse(url="/insight/login", status_code=303)
     return templates.TemplateResponse("index.html", {"request": request, "user": user})
+
+# NEW: Route to ask questions about a table
+@insight_app.get("/analyze/{table_name}", response_class=HTMLResponse)
+async def analyze_table(request: Request, table_name: str, question: str = Query(None)):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/insight/login", status_code=303)
+
+    # Get schema for LLM context
+    with engine.connect() as conn:
+        inspector = inspect(engine)
+        columns = inspector.get_columns(table_name)
+        schema = [f"{col['name']} ({str(col['type'])})" for col in columns]
+
+    if question:
+        # Construct LLM prompt
+        prompt_lines = [
+            f"You are an expert data analyst. A user has uploaded a table named '{table_name}' with the following schema:",
+            "",
+            *schema,
+            "",
+            f'They asked the following question:\n"{question}"',
+            "",
+            "Write a single SQL query (PostgreSQL dialect) that answers the question.",
+            "Do not include any commentary or explanation. Just return the SQL query only.",
+            ]
+        prompt = "\n".join(prompt_lines)
+
+        # Send prompt to LLM (mock placeholder)
+        sql_query = await query_llm_for_sql(prompt)  # <- function we will define next
+
+        # Execute SQL and fetch result
+        result_html = "<em>Query failed</em>"
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(text(sql_query))
+                df = pd.DataFrame(result.fetchall(), columns=result.keys())
+                result_html = df.to_html(classes="excel-preview", index=False)
+        except Exception as e:
+            result_html = f"<div style='color:red;'>Error executing query: {str(e)}</div>"
+
+        return templates.TemplateResponse("analyze.html", {
+            "request": request,
+            "user": user,
+            "table_name": table_name,
+            "question": question,
+            "sql_query": sql_query,
+            "result_html": result_html
+        })
+
+    # If no question yet, show input form
+    return templates.TemplateResponse("analyze.html", {
+        "request": request,
+        "user": user,
+        "table_name": table_name,
+        "question": None,
+        "sql_query": None,
+        "result_html": None
+    })
 
 @insight_app.get("/manage", response_class=HTMLResponse)
 async def manage_tables(request: Request):
@@ -187,6 +246,11 @@ async def parse_with_header(
                 "error": f"Header parsing failed: {str(e)}"
             }
         )
+
+# Placeholder for LLM call
+async def query_llm_for_sql(prompt: str) -> str:
+    # For now, return mock SQL
+    return "SELECT * FROM some_table LIMIT 10"
 
 main_app = FastAPI()
 main_app.mount("/insight", insight_app)
