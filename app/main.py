@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 import os, shutil
 import pandas as pd
 from app.db import slugify, insert_uploaded_file_metadata, insert_dynamic_table, engine
+from app.utils.llm_client import submit_llm_prompt, get_llm_response
 from sqlalchemy import text, inspect
 from app.middleware import AuthMiddleware
 from app.auth import router as auth_router
@@ -52,63 +53,82 @@ async def insight_index(request: Request):
         return RedirectResponse(url="/insight/login", status_code=303)
     return templates.TemplateResponse("index.html", {"request": request, "user": user})
 
-# NEW: Route to ask questions about a table
+# Route to ask questions about a table
 @insight_app.get("/analyze/{table_name}", response_class=HTMLResponse)
-async def analyze_table(request: Request, table_name: str, question: str = Query(None)):
+async def analyze_table(
+    request: Request,
+    table_name: str,
+    question: str = Query(None),
+    job_id: str = Query(None)
+):
     user = request.session.get("user")
     if not user:
         return RedirectResponse(url="/insight/login", status_code=303)
 
-    # Get schema for LLM context
+    # Get column schema
     with engine.connect() as conn:
         inspector = inspect(engine)
         columns = inspector.get_columns(table_name)
         schema = [f"{col['name']} ({str(col['type'])})" for col in columns]
 
+    # If user submitted a question
     if question:
-        # Construct LLM prompt
-        prompt_lines = [
-            f"You are an expert data analyst. A user has uploaded a table named '{table_name}' with the following schema:",
-            "",
-            *schema,
-            "",
-            f'They asked the following question:\n"{question}"',
-            "",
-            "Write a single SQL query (PostgreSQL dialect) that answers the question.",
-            "Do not include any commentary or explanation. Just return the SQL query only.",
+        if not job_id:
+            # Build prompt using multi-line style
+            prompt_lines = [
+                f"You are an expert data analyst. A user has uploaded a table named '{table_name}' with the following schema:",
+                "",
+                *schema,
+                "",
+                f'They asked the following question:\n"{question}"',
+                "",
+                "Write a single SQL query (PostgreSQL dialect) that answers the question.",
+                "Do not include any commentary or explanation. Just return the SQL query only.",
             ]
-        prompt = "\n".join(prompt_lines)
+            prompt = "\n".join(prompt_lines)
 
-        # Send prompt to LLM (mock placeholder)
-        sql_query = await query_llm_for_sql(prompt)  # <- function we will define next
+            # Submit job to Llamalith
+            job_id = await submit_llm_prompt(prompt)
+            return RedirectResponse(
+                url=f"/insight/analyze/{table_name}?question={question}&job_id={job_id}",
+                status_code=303
+            )
 
-        # Execute SQL and fetch result
-        result_html = "<em>Query failed</em>"
+        # Poll for response if job_id present
         try:
-            with engine.connect() as conn:
-                result = conn.execute(text(sql_query))
-                df = pd.DataFrame(result.fetchall(), columns=result.keys())
-                result_html = df.to_html(classes="excel-preview", index=False)
+            llm_result = await get_llm_response(job_id)
+            sql_query = llm_result.strip()
+
+            return templates.TemplateResponse("analyze.html", {
+                "request": request,
+                "user": user,
+                "table_name": table_name,
+                "question": question,
+                "sql_query": sql_query,
+                "result_html": None,
+                "job_id": job_id,
+            })
+
         except Exception as e:
-            result_html = f"<div style='color:red;'>Error executing query: {str(e)}</div>"
+            return templates.TemplateResponse("analyze.html", {
+                "request": request,
+                "user": user,
+                "table_name": table_name,
+                "question": question,
+                "sql_query": None,
+                "result_html": f"<div style='color:red;'>LLM Error: {str(e)}</div>",
+                "job_id": job_id,
+            })
 
-        return templates.TemplateResponse("analyze.html", {
-            "request": request,
-            "user": user,
-            "table_name": table_name,
-            "question": question,
-            "sql_query": sql_query,
-            "result_html": result_html
-        })
-
-    # If no question yet, show input form
+    # No question asked yet
     return templates.TemplateResponse("analyze.html", {
         "request": request,
         "user": user,
         "table_name": table_name,
         "question": None,
         "sql_query": None,
-        "result_html": None
+        "result_html": None,
+        "job_id": None,
     })
 
 @insight_app.get("/manage", response_class=HTMLResponse)
