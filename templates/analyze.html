@@ -1,71 +1,87 @@
 {% extends "base.html" %}
-{% block content %}
-<h1>Ask a Question About <code>{{ table_name }}</code></h1>
 
-<form id="question-form">
-  <label for="question">Your question:</label><br>
-  <input type="text" id="question" name="question" style="width: 80%;" required>
+{% block content %}
+<h2>Analyze: {{ table_name }}</h2>
+
+<form id="ask-form">
+  <label for="question">Ask a question about this table:</label><br>
+  <input type="text" id="question" name="question" size="60" required>
   <button type="submit">Ask</button>
 </form>
 
-<div id="response-area" style="margin-top: 2em;">
-  <p id="loading" style="display:none;"><em>Submitting your question…</em></p>
-  <div id="llm-output"></div>
-</div>
+<div id="loading" style="margin-top:1em;"></div>
+<div id="answer" style="margin-top:2em;"></div>
+
+{% if sql_query %}
+  <h3>Generated SQL Query:</h3>
+  <pre>{{ sql_query }}</pre>
+{% endif %}
+
+{% if result_html %}
+  <h3>Query Result:</h3>
+  {{ result_html|safe }}
+{% endif %}
+
 <pre id="table-preview" style="display:none;">
-  {{ table_preview }}
+{{ table_preview }}
 </pre>
+
 <script>
-document.getElementById("question-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const question = document.getElementById("question").value;
+document.getElementById("ask-form").addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  const question = document.getElementById("question").value.trim();
+  const preview = document.getElementById("table-preview").innerText.trim();
   const loadingEl = document.getElementById("loading");
-  const outputEl = document.getElementById("llm-output");
-  outputEl.innerHTML = "";
-  loadingEl.style.display = "block";
+  const answerEl = document.getElementById("answer");
+
+  if (!question) return;
+
+  loadingEl.innerHTML = "⏳ Sending question to LLM...";
+  answerEl.innerHTML = "";
 
   try {
-    const response = await fetch(`/insight/analyze/{{ table_name }}/ask`, {
+    const askRes = await fetch(`/insight/analyze/{{ table_name }}/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      const previewText = document.getElementById("table-preview")?.innerText || "";
-      body: JSON.stringify({ question, preview: previewText })
+      body: JSON.stringify({ question, preview })
     });
 
-    const data = await response.json();
-    if (!data.job_id) {
-      throw new Error("No job ID returned.");
+    const askData = await askRes.json();
+    if (!askData.ok || !askData.job_id) {
+      loadingEl.innerHTML = `<span style="color:red;">Error: Failed to queue job</span>`;
+      return;
     }
 
-    // Polling
-    const jobId = data.job_id;
+    const jobId = askData.job_id;
+    loadingEl.innerHTML = `🔄 Waiting for LLM response (Job ID: ${jobId})...`;
+
     let attempts = 0;
+    const maxAttempts = 60;
+    const delayMs = 2000;
 
-    async function pollForResult() {
-      const poll = await fetch(`/insight/analyze/status/${jobId}`);
-      const result = await poll.json();
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+      attempts++;
 
-      if (result.done) {
-        loadingEl.style.display = "none";
-        outputEl.innerHTML = `
-          <h3>Suggested SQL Query:</h3>
-          <pre><code>${result.output}</code></pre>
-          <form method="post" action="/insight/run_query/{{ table_name }}">
-            <input type="hidden" name="sql_query" value="${encodeURIComponent(result.output)}">
-            <button type="submit">Run This Query</button>
+      const statusRes = await fetch(`/insight/analyze/status/${jobId}`);
+      const statusData = await statusRes.json();
+
+      if (statusData.done) {
+        loadingEl.innerHTML = "";
+        answerEl.innerHTML = `
+          <h3>LLM Response:</h3>
+          <pre>${statusData.output}</pre>
+          <form action="/insight/run_query/{{ table_name }}" method="post">
+            <input type="hidden" name="sql_query" value="${encodeURIComponent(statusData.output)}">
+            <button type="submit">Run this SQL query</button>
           </form>
         `;
-      } else {
-        attempts++;
-        if (attempts > 60) {
-          loadingEl.innerHTML = "<span style='color:red;'>Timeout after waiting 2 minutes for LLM response.</span>";
-        } else {
-          setTimeout(pollForResult, 2000);
-        }
+        return;
       }
     }
 
-    pollForResult();
+    loadingEl.innerHTML = `<span style="color:red;">Timeout: LLM did not respond in time.</span>`;
   } catch (err) {
     loadingEl.innerHTML = `<span style="color:red;">Error: ${err.message}</span>`;
   }
