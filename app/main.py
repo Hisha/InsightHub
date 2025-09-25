@@ -247,6 +247,31 @@ async def parse_with_header(
             }
         )
 
+@insight_app.post("/run_query/{table_name}", response_class=HTMLResponse)
+async def run_llm_query(request: Request, table_name: str, sql_query: str = Form(...)):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/insight/login", status_code=303)
+
+    result_html = "<em>Query failed</em>"
+
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(sql_query))
+            df = pd.DataFrame(result.fetchall(), columns=result.keys())
+            result_html = df.to_html(classes="excel-preview", index=False)
+    except Exception as e:
+        result_html = f"<div style='color:red;'>Error executing query: {str(e)}</div>"
+
+    return templates.TemplateResponse("analyze.html", {
+        "request": request,
+        "user": user,
+        "table_name": table_name,
+        "question": None,
+        "sql_query": sql_query,
+        "result_html": result_html
+    })
+
 # Placeholder for LLM call
 async def query_llm_for_sql(prompt: str) -> str:
     # For now, return mock SQL
