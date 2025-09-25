@@ -15,7 +15,7 @@ from app.utils.security import SESSION_SECRET
 from datetime import datetime
 
 middleware = [
-    Middleware(SessionMiddleware, secret_key=SESSION_SECRET),
+    Middleware(SessionMiddleware, secret_key=SESSION_SECRET, session_cookie="insight_session"),
     Middleware(AuthMiddleware),
 ]
 
@@ -266,33 +266,6 @@ async def parse_with_header(
                 "error": f"Header parsing failed: {str(e)}"
             }
         )
-
-@insight_app.post("/run_query/{table_name}", response_class=HTMLResponse)
-async def run_llm_query(request: Request, table_name: str, sql_query: str = Form(...)):
-    user = request.session.get("user")
-    if not user:
-        return RedirectResponse(url="/insight/login", status_code=303)
-
-    result_html = "<em>Query failed</em>"
-
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(text(sql_query))
-            df = pd.DataFrame(result.fetchall(), columns=result.keys())
-            result_html = df.to_html(classes="excel-preview", index=False)
-    except Exception as e:
-        result_html = f"<div style='color:red;'>Error executing query: {str(e)}</div>"
-
-    return templates.TemplateResponse("analyze.html", {
-        "request": request,
-        "user": user,
-        "table_name": table_name,
-        "question": None,
-        "sql_query": sql_query,
-        "result_html": result_html
-    })
-
-from fastapi import Form
 
 @insight_app.post("/run_query/{table_name}", response_class=HTMLResponse)
 async def run_sql_query(
