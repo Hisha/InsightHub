@@ -42,3 +42,23 @@ async def ask_table_question(request: Request, table_name: str):
     job_id = job_data.get("job_id")
 
     return {"ok": True, "job_id": job_id}
+
+@router.get("/analyze/status/{job_id}")
+async def check_llamalith_status(job_id: str):
+    headers = {"Authorization": f"Bearer {LLAMALITH_API_TOKEN}"}
+
+    async with httpx.AsyncClient() as client:
+        try:
+            status_resp = await client.get(f"{LLAMALITH_API_URL}/api/jobs/{job_id}", headers=headers)
+        except httpx.RequestError as e:
+            return JSONResponse({"error": f"Llamalith connection error: {str(e)}"}, status_code=502)
+
+    if status_resp.status_code != 200:
+        return JSONResponse({"error": "Failed to get job status"}, status_code=500)
+
+    result = status_resp.json()
+
+    if result.get("status") == "done":
+        return {"done": True, "output": result.get("output", "").strip()}
+
+    return {"done": False}
