@@ -1,6 +1,8 @@
 import httpx
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Request, HTTPException
 from starlette.config import Config
+
+router = APIRouter()
 
 # Load from .env
 config = Config(".env")
