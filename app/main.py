@@ -3,11 +3,11 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware import Middleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 import os, shutil
 import pandas as pd
 from app.db import slugify, insert_uploaded_file_metadata, insert_dynamic_table, engine
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 from app.middleware import AuthMiddleware
 from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
@@ -30,12 +30,53 @@ templates.env.globals["current_year"] = datetime.now().year
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+#---------------------------------------------------------------------------------------------
+# DELETES
+#---------------------------------------------------------------------------------------------
+
+@insight_app.delete("/delete_table/{table_name}")
+async def delete_table(table_name: str):
+    with engine.begin() as conn:
+        conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+        conn.execute(text("DELETE FROM uploaded_files WHERE table_name = :tn"), {"tn": table_name})
+    return {"success": True}
+    
+#---------------------------------------------------------------------------------------------
+# GETS
+#---------------------------------------------------------------------------------------------
+
 @insight_app.get("/")
 async def insight_index(request: Request):
     user = request.session.get("user")
     if not user:
         return RedirectResponse(url="/insight/login", status_code=303)
     return templates.TemplateResponse("index.html", {"request": request, "user": user})
+
+@insight_app.get("/manage", response_class=HTMLResponse)
+async def manage_tables(request: Request):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/insight/login", status_code=303)
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT table_name, uploaded_by, uploaded_at FROM uploaded_files ORDER BY uploaded_at ASC"))
+        tables = [dict(row) for row in result.fetchall()]
+    return templates.TemplateResponse("manage.html", {"request": request, "user": user, "tables": tables})
+
+@insight_app.get("/preview_table/{table_name}")
+async def preview_table(table_name: str):
+    with engine.connect() as conn:
+        result = conn.execute(text(f"SELECT * FROM {table_name} LIMIT 20"))
+        rows = result.fetchall()
+        columns = result.keys()
+    table_html = "<table><thead><tr>" + "".join(f"<th>{col}</th>" for col in columns) + "</tr></thead><tbody>"
+    for row in rows:
+        table_html += "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
+    table_html += "</tbody></table>"
+    return HTMLResponse(content=table_html)
+
+#---------------------------------------------------------------------------------------------
+# POSTS
+#---------------------------------------------------------------------------------------------
 
 @insight_app.post("/upload")
 async def upload_excel(request: Request, file: UploadFile = File(...)):
