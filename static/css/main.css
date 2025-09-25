@@ -123,3 +123,11 @@ table.manage-table th {
   background-color: #fcfcfc;
   border-top: 1px solid #ccc;
 }
+
+.analyze-link {
+  text-decoration: none;
+  font-size: 1.2em;
+}
+.analyze-link:hover {
+  color: #357ab8;
+}
