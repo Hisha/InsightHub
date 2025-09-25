@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ask a question about table: <code>{{ table_name }}</code></h1>
+<form method="get">
+  <input type="hidden" name="table_name" value="{{ table_name }}"/>
+  <input type="text" name="question" placeholder="e.g. What is the most common issue location?" style="width:60%; padding:0.5em;" required/>
+  <button type="submit">Ask</button>
+</form>
+
+{% if sql_query %}
+  <h3>Generated SQL:</h3>
+  <pre style="background:#f0f0f0; padding:1em;">{{ sql_query }}</pre>
+{% endif %}
+
+{% if result_html %}
+  <h3>Result:</h3>
+  {{ result_html|safe }}
+{% endif %}
+{% endblock %}
