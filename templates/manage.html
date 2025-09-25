@@ -29,29 +29,44 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const buttons = document.querySelectorAll(".expand-btn");
+  const previewButtons = document.querySelectorAll(".preview-btn");
 
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const row = btn.closest("tr");
-      const tableName = row.getAttribute("data-table");
-      const alreadyExpanded = row.nextElementSibling?.classList.contains("preview-row");
+  previewButtons.forEach(button => {
+    button.addEventListener("click", async () => {
+      const tableName = button.getAttribute("data-name");
+      const previewRow = document.getElementById(`preview-${tableName}`);
 
-      if (alreadyExpanded) {
-        row.nextElementSibling.remove();
-        return;
+      if (previewRow.style.display === "none") {
+        previewRow.querySelector(".preview-content").innerHTML = "Loading...";
+        previewRow.style.display = "table-row";
+
+        const response = await fetch(`/insight/preview_table/${tableName}`);
+        const html = await response.text();
+        previewRow.querySelector(".preview-content").innerHTML = html;
+      } else {
+        previewRow.style.display = "none";
       }
+    });
+  });
 
-      const response = await fetch(`/insight/preview_table?name=${tableName}`);
-      const data = await response.text();
+  const deleteButtons = document.querySelectorAll(".delete-btn");
 
-      const previewRow = document.createElement("tr");
-      previewRow.classList.add("preview-row");
-      previewRow.innerHTML = `<td colspan="4" class="manage-preview">${data}</td>`;
-      row.parentNode.insertBefore(previewRow, row.nextSibling);
+  deleteButtons.forEach(button => {
+    button.addEventListener("click", async () => {
+      const tableName = button.getAttribute("data-name");
+      if (confirm(`Are you sure you want to delete table "${tableName}"?`)) {
+        const response = await fetch(`/insight/delete_table/${tableName}`, { method: "DELETE" });
+        if (response.ok) {
+          button.closest("tr").nextElementSibling.remove(); // remove preview row
+          button.closest("tr").remove(); // remove main row
+        } else {
+          alert("Delete failed.");
+        }
+      }
     });
   });
 });
 </script>
+
 
 {% endblock %}
