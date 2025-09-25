@@ -26,4 +26,32 @@
     {% endfor %}
   </tbody>
 </table>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const buttons = document.querySelectorAll(".expand-btn");
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const row = btn.closest("tr");
+      const tableName = row.getAttribute("data-table");
+      const alreadyExpanded = row.nextElementSibling?.classList.contains("preview-row");
+
+      if (alreadyExpanded) {
+        row.nextElementSibling.remove();
+        return;
+      }
+
+      const response = await fetch(`/insight/preview_table?name=${tableName}`);
+      const data = await response.text();
+
+      const previewRow = document.createElement("tr");
+      previewRow.classList.add("preview-row");
+      previewRow.innerHTML = `<td colspan="4" class="manage-preview">${data}</td>`;
+      row.parentNode.insertBefore(previewRow, row.nextSibling);
+    });
+  });
+});
+</script>
+
 {% endblock %}
