@@ -9,6 +9,7 @@
       <th>Date</th>
       <th>Preview</th>
       <th>Delete</th>
+      <th>Analyze</th>
     </tr>
   </thead>
   <tbody>
@@ -19,6 +20,7 @@
       <td>{{ table.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
       <td><button class="preview-btn" data-name="{{ table.table_name }}">+</button></td>
       <td><button class="delete-btn" data-name="{{ table.table_name }}">🗑️</button></td>
+      <td><a href="/insight/analyze/{{ table.table_name }}" class="analyze-link">🔍</a></td>
     </tr>
     <tr class="preview-row" id="preview-{{ table.table_name }}" style="display:none;">
       <td colspan="5"><div class="preview-content">Loading...</div></td>
