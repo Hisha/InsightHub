@@ -3,26 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <title>InsightHub</title>
-  {% block head %}
   <link rel="stylesheet" href="{{ url_for('static', path='main.css') }}">
-  {% endblock %}
 </head>
 <body>
 
+  <div class="layout-wrapper">
     <nav>
-        InsightHub |
-        <a href="/insight/">Upload</a>
-        <a href="#">Browse</a>
-        <!-- Add more links later -->
+      <a href="/insight/">InsightHub</a>
+      <a href="/insight/">Upload</a>
+      <a href="#">Browse</a>
     </nav>
 
     <main>
-        {% block content %}{% endblock %}
+      {% block content %}{% endblock %}
     </main>
 
     <footer>
-        &copy; {{ 2025 }} InsightHub | Built with ❤️ and FastAPI
+      &copy; {{ 2025 }} InsightHub | Built with ❤️ and FastAPI
     </footer>
+  </div>
 
 </body>
 </html>
