@@ -62,6 +62,19 @@ async def manage_tables(request: Request):
         tables = result.mappings().all()
     return templates.TemplateResponse("manage.html", {"request": request, "user": user, "tables": tables})
 
+@insight_app.get("/preview_table")
+async def preview_table(name: str):
+    try:
+        with engine.begin() as conn:
+            result = conn.execute(text(f"SELECT * FROM `{name}` LIMIT 20"))
+            rows = result.mappings().all()
+            if not rows:
+                return "<em>No data in table</em>"
+            df = pd.DataFrame(rows)
+            return df.to_html(classes="excel-preview", index=False)
+    except Exception as e:
+        return f"<div style='color:red;'>Error previewing table: {str(e)}</div>"
+
 @insight_app.get("/preview_table/{table_name}")
 async def preview_table(table_name: str):
     with engine.connect() as conn:
