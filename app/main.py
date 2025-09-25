@@ -25,7 +25,7 @@ insight_app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 templates.env.globals["root_path"] = "/insight/"
-templates.env.globals["now"] = lambda: datetime.now()
+templates.env.globals["current_year"] = datetime.now().year
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
