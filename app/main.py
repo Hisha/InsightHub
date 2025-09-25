@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import os, shutil
 import pandas as pd
-
+from app.db import slugify, insert_uploaded_file_metadata, insert_dynamic_table
 from app.middleware import AuthMiddleware
 from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
@@ -78,6 +78,31 @@ async def parse_with_header(
         # Replace NaNs with empty string
         df = df.fillna("")
 
+        # Generate safe base name
+        base_name = os.path.splitext(filename)[0]
+        user_slug = slugify(base_name)
+
+        # Insert metadata first (we’ll use returned ID to name the data table)
+        row_count = len(df)
+        upload_id = insert_uploaded_file_metadata(
+            filename=filename,
+            table_name="",  # placeholder for now
+            uploaded_by=user,
+            header_row=header_row,
+            row_count=row_count,
+        )
+
+        # Generate actual table name
+        table_name = f"data_{upload_id}_{user_slug}"
+        table_name = table_name[:64]  # Limit to safe length
+
+        # Now insert the DataFrame into the new table
+        insert_dynamic_table(df, table_name)
+
+        # Update uploaded_files with the correct table name
+        with engine.begin() as conn:
+            conn.execute(text("UPDATE uploaded_files SET table_name = :tn WHERE id = :id"), {"tn": table_name, "id": upload_id})
+        
         cleaned_html = df.head(20).to_html(classes="excel-preview", index=False)
 
         return templates.TemplateResponse(
