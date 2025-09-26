@@ -56,6 +56,7 @@ async def ask_table_question(request: Request, table_name: str):
 
     # Print the raw response details to see what's really going on
     logger.info("📤 Llamalith response status: %s", job_resp.status_code)
+    logger.info("🚀 InsightHub is driving me nuts.")
     logger.info("📤 Llamalith response body: %s", job_resp.text)
 
     if job_resp.status_code != 200:
