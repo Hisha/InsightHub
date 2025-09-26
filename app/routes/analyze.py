@@ -44,7 +44,7 @@ async def ask_table_question(request: Request, table_name: str):
                 headers=headers
             )
         except Exception as e:
-           logger.error("🚨 HTTPX exception during job submission:", e)
+            logger.error("🚨 HTTPX exception during job submission:", e)
             raise HTTPException(status_code=500, detail="Exception during job submission")
 
     # Print the raw response details to see what's really going on
