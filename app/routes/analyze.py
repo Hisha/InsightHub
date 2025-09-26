@@ -35,8 +35,6 @@ async def ask_table_question(request: Request, table_name: str):
     headers = {"Authorization": f"Bearer {LLAMALITH_API_TOKEN}"}
 
     async with httpx.AsyncClient() as client:
-        job_resp = await client.post(f"{LLAMALITH_API_URL}/api/jobs", json=payload, headers=headers)
-
         try:
             print(f"🔹 Llamalith POST: {LLAMALITH_API_URL}/api/jobs")
             print(f"🔹 Payload: {payload}")
@@ -49,31 +47,21 @@ async def ask_table_question(request: Request, table_name: str):
             print(f"❌ Exception during POST to Llamalith: {e}")
             raise HTTPException(status_code=500, detail="Failed to contact LLM")
 
-        if job_resp.status_code != 200:
-            return JSONResponse({
-                "error": f"Failed to queue LLM job: HTTP {job_resp.status_code}",
-                "response": job_resp.text
-            }, status_code=500)
+    if job_resp.status_code != 200:
+        return JSONResponse({
+            "error": f"Failed to queue LLM job: HTTP {job_resp.status_code}"
+        }, status_code=500)
 
-        try:
-            job_data = await job_resp.json()
-        except Exception as e:
-            return JSONResponse({
-                "error": "Failed to parse LLM response",
-                "raw_response": await job_resp.aread(),
-                "exception": str(e)
-            }, status_code=500)
+    try:
+        job_data = job_resp.json()
+    except Exception:
+        return JSONResponse({"error": "Failed to parse LLM response"}, status_code=500)
 
-        print("✅ Llamalith job response parsed:", job_data)
+    job_id = job_data.get("job_id")
+    if not job_id:
+        return JSONResponse({"error": f"LLM returned no job_id. Response: {job_data}"}, status_code=500)
 
-        job_id = job_data.get("job_id")
-        if not job_id:
-            return JSONResponse({
-                "error": "LLM returned no job_id",
-                "job_data": job_data
-            }, status_code=500)
-
-        return {"ok": True, "job_id": job_id}
+    return {"ok": True, "job_id": job_id}
 
 @router.get("/analyze/status/{job_id}")
 async def check_llamalith_status(job_id: str):
