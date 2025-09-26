@@ -48,8 +48,8 @@ async def ask_table_question(request: Request, table_name: str):
     print("Llamalith response:", job_data)
     
     job_id = job_data.get("job_id")
-        if not job_id:
-            return JSONResponse({"error": f"LLM returned no job_id. Response: {job_data}"}, status_code=500)
+    if not job_id:
+        return JSONResponse({"error": f"LLM returned no job_id. Response: {job_data}"}, status_code=500)
 
     return {"ok": True, "job_id": job_id}
 
