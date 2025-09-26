@@ -1,6 +1,8 @@
 import httpx
 from fastapi import APIRouter, Request, HTTPException
 from starlette.config import Config
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -42,12 +44,12 @@ async def ask_table_question(request: Request, table_name: str):
                 headers=headers
             )
         except Exception as e:
-            print("🚨 HTTPX exception during job submission:", e)
+           logger.error("🚨 HTTPX exception during job submission:", e)
             raise HTTPException(status_code=500, detail="Exception during job submission")
 
     # Print the raw response details to see what's really going on
-    print("📤 Llamalith response status:", job_resp.status_code)
-    print("📤 Llamalith response body:", job_resp.text)
+    logger.info("📤 Llamalith response status:", job_resp.status_code)
+    logger.info("📤 Llamalith response body:", job_resp.text)
 
     if job_resp.status_code != 200:
         return JSONResponse({
