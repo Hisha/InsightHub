@@ -15,6 +15,9 @@ from app.auth import router as auth_router
 from app.utils.security import SESSION_SECRET
 from datetime import datetime
 from app.routes import analyze
+from app.logging_config import setup_logging
+
+setup_logging()  # ✅ Activate logging early
 
 middleware = [
     Middleware(SessionMiddleware, secret_key=SESSION_SECRET, session_cookie="insight_session"),
