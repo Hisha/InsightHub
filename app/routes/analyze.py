@@ -43,6 +43,8 @@ async def ask_table_question(request: Request, table_name: str):
 
     headers = {"Authorization": f"Bearer {LLAMALITH_API_TOKEN}"}
 
+    logger.info("🚀 InsightHub is driving me nuts.")
+        
     try:
         async with httpx.AsyncClient() as client:
             job_resp = await client.post(
@@ -52,7 +54,6 @@ async def ask_table_question(request: Request, table_name: str):
             )
 
         logger.info("📤 Llamalith response status: %s", job_resp.status_code)
-        logger.info("🚀 InsightHub is driving me nuts.")
         logger.info("📤 Llamalith response body: %s", job_resp.text)
 
     except Exception as e:
