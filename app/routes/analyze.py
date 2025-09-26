@@ -9,6 +9,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger("insighthub.analyze")
 
+logger.info("🚀 InsightHub analyze router loaded successfully")
+
 router = APIRouter()
 
 # Load from .env
