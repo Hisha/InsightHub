@@ -43,21 +43,21 @@ async def ask_table_question(request: Request, table_name: str):
 
     headers = {"Authorization": f"Bearer {LLAMALITH_API_TOKEN}"}
 
-    async with httpx.AsyncClient() as client:
-        try:
+    try:
+        async with httpx.AsyncClient() as client:
             job_resp = await client.post(
                 f"{LLAMALITH_API_URL}/api/jobs",
                 json=payload,
                 headers=headers
             )
-        except Exception as e:
-            logger.error("🚨 HTTPX exception during job submission: %s", e)
-            raise HTTPException(status_code=500, detail="Exception during job submission")
 
-    # Print the raw response details to see what's really going on
-    logger.info("📤 Llamalith response status: %s", job_resp.status_code)
-    logger.info("🚀 InsightHub is driving me nuts.")
-    logger.info("📤 Llamalith response body: %s", job_resp.text)
+        logger.info("📤 Llamalith response status: %s", job_resp.status_code)
+        logger.info("🚀 InsightHub is driving me nuts.")
+        logger.info("📤 Llamalith response body: %s", job_resp.text)
+
+    except Exception as e:
+        logger.error("❌ Exception during Llamalith call: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to contact Llamalith")
 
     if job_resp.status_code != 200:
         return JSONResponse({
