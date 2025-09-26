@@ -38,10 +38,16 @@ async def ask_table_question(request: Request, table_name: str):
         job_resp = await client.post(f"{LLAMALITH_API_URL}/api/jobs", json=payload, headers=headers)
 
     if job_resp.status_code != 200:
-        return JSONResponse({"error": "Failed to queue LLM job"}, status_code=500)
+        return JSONResponse({"error": f"Failed to queue LLM job: HTTP {job_resp.status_code}"}, status_code=500)
 
-    job_data = job_resp.json()
+    try:
+        job_data = job_resp.json()
+    except Exception:
+        return JSONResponse({"error": "Failed to parse LLM response"}, status_code=500)
+
     job_id = job_data.get("job_id")
+        if not job_id:
+            return JSONResponse({"error": f"LLM returned no job_id. Response: {job_data}"}, status_code=500)
 
     return {"ok": True, "job_id": job_id}
 
