@@ -32,28 +32,28 @@ async def ask_table_question(request: Request, table_name: str):
         "system_prompt": system_prompt
     }
 
-        headers = {"Authorization": f"Bearer {LLAMALITH_API_TOKEN}"}
+    headers = {"Authorization": f"Bearer {LLAMALITH_API_TOKEN}"}
 
-        async with httpx.AsyncClient() as client:
-            try:
-                job_resp = await client.post(
-                    f"{LLAMALITH_API_URL}/api/jobs",
-                    json=payload,
-                    headers=headers
-                )
-            except Exception as e:
-                print("🚨 HTTPX exception during job submission:", e)
-                raise HTTPException(status_code=500, detail="Exception during job submission")
+    async with httpx.AsyncClient() as client:
+        try:
+            job_resp = await client.post(
+                f"{LLAMALITH_API_URL}/api/jobs",
+                json=payload,
+                headers=headers
+            )
+        except Exception as e:
+            print("🚨 HTTPX exception during job submission:", e)
+            raise HTTPException(status_code=500, detail="Exception during job submission")
 
-        # Print the raw response details to see what's really going on
-        print("📤 Llamalith response status:", job_resp.status_code)
-        print("📤 Llamalith response body:", job_resp.text)
+    # Print the raw response details to see what's really going on
+    print("📤 Llamalith response status:", job_resp.status_code)
+    print("📤 Llamalith response body:", job_resp.text)
 
-        if job_resp.status_code != 200:
-            return JSONResponse({
-                "error": f"Failed to queue LLM job: HTTP {job_resp.status_code}",
-                "details": job_resp.text
-            }, status_code=500)
+    if job_resp.status_code != 200:
+        return JSONResponse({
+            "error": f"Failed to queue LLM job: HTTP {job_resp.status_code}",
+            "details": job_resp.text
+        }, status_code=500)
 
     try:
         job_data = job_resp.json()
