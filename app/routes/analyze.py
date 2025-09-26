@@ -59,13 +59,17 @@ async def ask_table_question(request: Request, table_name: str):
 
     try:
         job_data = job_resp.json()
-    except Exception:
+        logger.info("📤 Llamalith job response JSON: %s", job_data)
+    except Exception as e:
+        logger.error("❌ Failed to parse Llamalith JSON: %s", job_resp.text)
         return JSONResponse({"error": "Failed to parse LLM response"}, status_code=500)
 
     job_id = job_data.get("job_id")
     if not job_id:
-        return JSONResponse({"error": f"LLM returned no job_id. Response: {job_data}"}, status_code=500)
+        logger.warning("⚠️ LLM response missing job_id: %s", job_data)
+        return JSONResponse({"error": "No job ID returned by LLM"}, status_code=500)
 
+    logger.info("✅ Queued job ID: %s", job_id)
     return {"ok": True, "job_id": job_id}
 
 @router.get("/analyze/status/{job_id}")
