@@ -45,6 +45,8 @@ async def ask_table_question(request: Request, table_name: str):
     except Exception:
         return JSONResponse({"error": "Failed to parse LLM response"}, status_code=500)
 
+    print("Llamalith response:", job_data)
+    
     job_id = job_data.get("job_id")
         if not job_id:
             return JSONResponse({"error": f"LLM returned no job_id. Response: {job_data}"}, status_code=500)
