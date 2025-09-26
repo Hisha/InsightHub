@@ -37,22 +37,42 @@ async def ask_table_question(request: Request, table_name: str):
     async with httpx.AsyncClient() as client:
         job_resp = await client.post(f"{LLAMALITH_API_URL}/api/jobs", json=payload, headers=headers)
 
+        try:
+        print(f"🔹 Llamalith POST: {LLAMALITH_API_URL}/api/jobs")
+        print(f"🔹 Payload: {payload}")
+        print(f"🔹 Headers: {headers}")
+
+        job_resp = await client.post(f"{LLAMALITH_API_URL}/api/jobs", json=payload, headers=headers)
+        print(f"🔹 Status code: {job_resp.status_code}")
+        print(f"🔹 Raw text: {job_resp.text}")
+    except Exception as e:
+        print(f"❌ Exception during POST to Llamalith: {e}")
+        raise HTTPException(status_code=500, detail="Failed to contact LLM")
+
     if job_resp.status_code != 200:
-        return JSONResponse({"error": f"Failed to queue LLM job: HTTP {job_resp.status_code}"}, status_code=500)
+        return JSONResponse({
+            "error": f"Failed to queue LLM job: HTTP {job_resp.status_code}",
+            "response": job_resp.text
+        }, status_code=500)
 
     try:
         job_data = await job_resp.json()
     except Exception as e:
-        return JSONResponse({"error": f"Failed to parse LLM response: {str(e)}"}, status_code=500)
+        return JSONResponse({
+            "error": "Failed to parse LLM response",
+            "raw_response": await job_resp.aread(),
+            "exception": str(e)
+        }, status_code=500)
 
-    print("Llamalith response:", job_data)
-    
+    print("✅ Llamalith job response parsed:", job_data)
+
     job_id = job_data.get("job_id")
     if not job_id:
-        return JSONResponse({"error": f"LLM returned no job_id. Response: {job_data}"}, status_code=500)
-    
-    print("✅ Llamalith job queued:", job_id)
-    
+        return JSONResponse({
+            "error": "LLM returned no job_id",
+            "job_data": job_data
+        }, status_code=500)
+
     return {"ok": True, "job_id": job_id}
 
 @router.get("/analyze/status/{job_id}")
