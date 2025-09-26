@@ -44,12 +44,12 @@ async def ask_table_question(request: Request, table_name: str):
                 headers=headers
             )
         except Exception as e:
-            logger.error("🚨 HTTPX exception during job submission:", e)
+            logger.error("🚨 HTTPX exception during job submission: %s", e)
             raise HTTPException(status_code=500, detail="Exception during job submission")
 
     # Print the raw response details to see what's really going on
-    logger.info("📤 Llamalith response status:", job_resp.status_code)
-    logger.info("📤 Llamalith response body:", job_resp.text)
+    logger.info("📤 Llamalith response status: %s", job_resp.status_code)
+    logger.info("📤 Llamalith response body: %s", job_resp.text)
 
     if job_resp.status_code != 200:
         return JSONResponse({
